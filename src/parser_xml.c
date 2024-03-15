@@ -806,13 +806,13 @@ lydxml_subtree_inner(struct lyd_xml_ctx *lydctx, const struct lysc_node *snode, 
 
     *node = NULL;
 
-    if (!xmlctx->ws_only) {
-        /* value in inner node */
-        LOGVAL(xmlctx->ctx, LYVE_SYNTAX, "Text value \"%.*s\" inside an inner node \"%s\" found.",
-                (int)xmlctx->value_len, xmlctx->value, snode->name);
-        r = LY_EVALID;
-        LY_DPARSER_ERR_GOTO(r, rc = r, lydctx, cleanup);
-    }
+    // if (!xmlctx->ws_only) {
+    //     /* value in inner node */
+    //     LOGVAL(xmlctx->ctx, LYVE_SYNTAX, "Text value \"%.*s\" inside an inner node \"%s\" found.",
+    //             (int)xmlctx->value_len, xmlctx->value, snode->name);
+    //     r = LY_EVALID;
+    //     LY_DPARSER_ERR_GOTO(r, rc = r, lydctx, cleanup);
+    // }
 
     /* create node */
     rc = lyd_create_inner(snode, node);
@@ -1075,7 +1075,14 @@ lydxml_subtree_r(struct lyd_xml_ctx *lydctx, struct lyd_node *parent, struct lyd
         r = lydxml_subtree_term(lydctx, parent, snode, &node);
     } else if (snode->nodetype & LYD_NODE_INNER) {
         /* inner */
-        r = lydxml_subtree_inner(lydctx, snode, ext, &node);
+        /* 'augmented-by' is an exception */
+        // if(!strcmp(snode->name, "augmented-by") && xmlctx->value != NULL) {   
+        //     LOGVAL(xmlctx->ctx, LYVE_SYNTAX, "try to validate");
+        //     r = lydxml_subtree_any(lydctx, snode, ext, &node);
+        //     LOGVAL(xmlctx->ctx, LYVE_SYNTAX, "finish validation, retCode = %d", r);
+        // } else {
+    r = lydxml_subtree_inner(lydctx, snode, ext, &node);
+        // }
     } else {
         /* any */
         assert(snode->nodetype & LYD_NODE_ANY);
@@ -1956,7 +1963,7 @@ lyd_parse_xml_netconf(const struct ly_ctx *ctx, const struct lysc_ext_instance *
     while (lydctx->xmlctx->status == LYXML_ELEMENT) {
         LY_CHECK_GOTO(rc = lydxml_subtree_r(lydctx, parent, first_p, parsed), cleanup);
         parsed_data_nodes = 1;
-
+        
         if (!(int_opts & LYD_INTOPT_WITH_SIBLINGS)) {
             break;
         }

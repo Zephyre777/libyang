@@ -51,6 +51,7 @@
 #include "../models/ietf-datastores@2018-02-14.h"
 #include "../models/ietf-inet-types@2013-07-15.h"
 #include "../models/ietf-yang-library@2019-01-04.h"
+#include "../models/ietf-yang-library-augmentedby@2023-10-27.h"
 #include "../models/ietf-yang-metadata@2016-08-05.h"
 #include "../models/ietf-yang-schema-mount@2019-01-14.h"
 #include "../models/ietf-yang-structure-ext@2020-06-17.h"
@@ -1159,6 +1160,34 @@ ylib_deviation(struct lyd_node *parent, const struct lys_module *cur_mod, ly_boo
 }
 
 static LY_ERR
+ylib_augmentedby(struct lyd_node *parent, const struct lys_module *cur_mod, ly_bool bis)
+{
+    LY_ARRAY_COUNT_TYPE i;
+    struct lys_module *mod, *aug_mod;
+    struct lyd_node *new_node;
+
+    if (!cur_mod->implemented) {
+        /* no augmentation of the module for certain */
+        return LY_SUCCESS;
+    }
+    aug_mod = ly_ctx_get_module_implemented(LYD_CTX(parent), "ietf-yang-library-augmentedby");
+    LY_CHECK_ERR_RET(!aug_mod, LOGERR(LYD_CTX(parent), LY_EINVAL, "Module \"ietf-yang-library-augmented-by\" is not implemented."), LY_EINVAL);
+
+    LY_ARRAY_FOR(cur_mod->augmented_by, i) {
+        mod = cur_mod->augmented_by[i];
+
+        if (bis) {
+            LY_CHECK_RET(lyd_new_term(parent, aug_mod, "augmented-by", mod->name, 0, NULL));
+        } else {
+            LY_CHECK_RET(lyd_new_list(parent, aug_mod, "augmented-by", 0, NULL, mod->name,
+                    (mod->parsed->revs ? mod->parsed->revs[0].date : "")));
+        }
+    }
+
+    return LY_SUCCESS;
+}
+
+static LY_ERR
 ylib_submodules(struct lyd_node *parent, const struct lysp_module *pmod, ly_bool bis)
 {
     LY_ERR ret;
@@ -1260,6 +1289,9 @@ ly_ctx_get_yanglib_data(const struct ly_ctx *ctx, struct lyd_node **root_p, cons
         /* deviation list */
         LY_CHECK_GOTO(ret = ylib_deviation(cont, mod, 0), error);
 
+        /* augmentation list */
+        LY_CHECK_GOTO(ret = ylib_augmentedby(cont, mod, 0), error);
+
         /* conformance-type */
         LY_CHECK_GOTO(ret = lyd_new_term(cont, NULL, "conformance-type", mod->implemented ? "implement" : "import", 0, NULL), error);
 
@@ -1303,6 +1335,9 @@ ly_ctx_get_yanglib_data(const struct ly_ctx *ctx, struct lyd_node **root_p, cons
 
             /* deviation */
             LY_CHECK_GOTO(ret = ylib_deviation(cont, mod, 1), error);
+
+            /* augmentedby list */
+            LY_CHECK_GOTO(ret = ylib_augmentedby(cont, mod, 1), error);
         }
     }
 

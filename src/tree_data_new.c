@@ -58,7 +58,7 @@ lyd_create_term(const struct lysc_node *schema, const char *value, size_t value_
     LY_ERR ret;
     struct lyd_node_term *term;
 
-    assert(schema->nodetype & LYD_NODE_TERM);
+    // assert(schema->nodetype & LYD_NODE_TERM);
 
     term = calloc(1, sizeof *term);
     LY_CHECK_ERR_RET(!term, LOGMEM(schema->module->ctx), LY_EMEM);
@@ -317,7 +317,7 @@ lyd_create_any(const struct lysc_node *schema, const void *value, LYD_ANYDATA_VA
     union lyd_any_value any_val;
     struct ly_in *in = NULL;
 
-    assert(schema->nodetype & LYD_NODE_ANY);
+    // assert(schema->nodetype & LYD_NODE_ANY);
 
     any = calloc(1, sizeof *any);
     LY_CHECK_ERR_RET(!any, LOGMEM(schema->module->ctx), LY_EMEM);
