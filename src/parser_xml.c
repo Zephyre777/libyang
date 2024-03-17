@@ -1077,10 +1077,8 @@ lydxml_subtree_r(struct lyd_xml_ctx *lydctx, struct lyd_node *parent, struct lyd
         /* inner */
         /* 'augmented-by' is an exception */
         if(!strcmp(snode->name, "augmented-by") && xmlctx->value != NULL) {   
-            LOGVAL(xmlctx->ctx, LYVE_SYNTAX, "try to validate");
             r = lydxml_subtree_opaq(lydctx, parent ? lyd_child(parent) : *first_p, prefix, prefix_len, name, name_len,
                 &insert_anchor, &node);
-            LOGVAL(xmlctx->ctx, LYVE_SYNTAX, "finish validation, retCode = %d", r);
         } else {
             r = lydxml_subtree_inner(lydctx, snode, ext, &node);
         }
